@@ -6,6 +6,7 @@ import { Video } from "../models/video.model.js";
 import { Channel } from "../models/channel.model.js";
 import { deleteFromCloudinary, UploadOnCloudinary } from '../utiles/Cloudinary.js'
 import jwt from 'jsonwebtoken'
+import fs from 'fs';
 // {
 //     "username" : "Harshit verma",
 //     "email": "harshitv@8171gmail.com",
@@ -44,7 +45,7 @@ const userRegister = asyncHandler(async (req, res) => {
     const { username, email, password, location, contact_number } = req.body;
 
     if ([username, email, password, location, contact_number].some((item) => item?.trim() === '')) {
-        throw new ApiError(500, 'Please fill the fields')
+        throw new ApiError(400, 'Please fill the fields')
     }
 
     const existedUser = await User.findOne({
@@ -52,16 +53,15 @@ const userRegister = asyncHandler(async (req, res) => {
     })
 
     if (existedUser) {
-        throw new ApiError(500, 'User is already exists');
+        throw new ApiError(409, 'User is already exists');
     }
-
     const avatarLocalPath = req.files?.avatar?.[0]?.path;
     if (!avatarLocalPath) {
         throw new ApiError(400, "Something went wrong during uploading the avatar on cloudinary");
     }
 
     const avatarURL = await UploadOnCloudinary(avatarLocalPath);
-
+    await fs.promises.unlink(avatarLocalPath); // Remove the local file after uploading to Cloudinary
     const RegisteredUser = await User.create({
         username,
         email,
@@ -110,7 +110,7 @@ const userLogin = asyncHandler(async (req, res) => {
     }
 
     let user = await User.findOne({
-        $or: [{ username }, { email }]
+        $or: [{ email }]
     })
     if (!user) {
         throw new ApiError(404, 'User does not exists');
@@ -237,7 +237,7 @@ const addToWatchHistory = asyncHandler(async (req, res) => {
 const getWatchHistory = asyncHandler(async (req, res) => {
     const user = await User.findById(req.user._id)
         .populate("watchHistory.video");
-    res
+    return res
         .status(200)
         .json(new ApiResponse(201, { user }, "Watched Videos!!!"));
 })
@@ -285,17 +285,27 @@ const updateCredentials = asyncHandler(async (req, res) => {
     if (email) updatedCredentials.email = email;
     if (location) updatedCredentials.location = location;
     if (contact_number) updatedCredentials.contact_number = contact_number;
+
+    const existedUser = await User.findOne(req.user._id);
+
     if (req.file?.path) {
+
         const avatar = await UploadOnCloudinary(req.file.path);
+        await fs.promises.unlink(req.file.path); // Remove the local file after uploading to Cloudinary
+        if (existedUser.avatarPublicId) {
+            await deleteFromCloudinary(existedUser.avatarPublicId, "image");
+        }
+
         if (!avatar?.url) {
             throw new ApiError(400, "Error while uploading avatar");
         }
         updatedCredentials.avatar = avatar.url;
-        updateCredentials.avatarPublicId = avatar.public_id;
+        updatedCredentials.avatarPublicId = avatar.public_id;
     }
 
     const user = await User.findByIdAndUpdate(
-        req.user?._id, { $set: updatedCredentials },
+        req.user?._id,
+        { $set: updatedCredentials },
         { new: true }
     ).select('-password -refreshToken');
 
@@ -322,11 +332,12 @@ const deleteUser = asyncHandler(async (req, res) => {
             await deleteFromCloudinary(channel.logoPublicId, "image");
             await deleteFromCloudinary(channel.bannerPublicId, "image");
 
-            const channelVideos = await Video.find({ owner: channel.owner});
+            const channelVideos = await Video.find({ owner: channel.owner });
 
             for (const video of channelVideos) {
                 await deleteFromCloudinary(video.videoPublicId, "video");
-                await deleteFromCloudinary(video.thumbnailPublicId, "image");}
+                await deleteFromCloudinary(video.thumbnailPublicId, "image");
+            }
 
             await Video.deleteMany({ owner: channel.owner });
             await channel.deleteOne();
@@ -337,7 +348,8 @@ const deleteUser = asyncHandler(async (req, res) => {
     res.clearCookie("token", {
         httpOnly: true,
         secure: true,
-        sameSite: "strict",});
+        sameSite: "strict",
+    });
 
     return res
         .status(200)

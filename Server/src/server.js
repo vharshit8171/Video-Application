@@ -1,20 +1,20 @@
 import cors from 'cors'
 import express from 'express';
 import cookieParser from 'cookie-parser';
-import {ApiResponse} from "./utiles/ApiResponse.js"
+import { ApiResponse } from "./utiles/ApiResponse.js"
 import { globalLimiter } from './middlewares/RateLimiter.middleware.js';
 
 const app = express()
 
-    app.use(cors({ 
-        origin: "http://localhost:5173",
-        credentials: true, //important when using cookies or auth tokens
-    }));
-    app.use(express.json({limit:"30kb"}));
-    app.use(express.urlencoded({extended: true}));
-    app.use(express.static("public"));
-    app.use(cookieParser())
-    app.use(globalLimiter);
+app.use(cors({
+    origin: "http://localhost:5173",
+    credentials: true, //important when using cookies or auth tokens
+}));
+app.use(express.json({ limit: "30kb" }));
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static("public"));
+app.use(cookieParser())
+app.use(globalLimiter);
 
 // Importing all the routers
 import userRouter from './routes/user.routers.js'
@@ -30,12 +30,12 @@ app.use('/api/v1/playlist', playlistRouter);
 app.use('/api/v1/channel', channelRouter);
 app.use("/api/v1/auth", authRouter);
 
-app.use((req,res) => {
+app.use((req, res) => {
     return res
-    .status(404)
-    .json(
-        new ApiResponse(404,"API route not found")
-    )
+        .status(404)
+        .json(
+            new ApiResponse(404, "API route not found")
+        )
 });
 
-export {app}
+export { app }

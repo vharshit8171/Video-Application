@@ -59,18 +59,24 @@ export const useChannelStore = create((set, get) => ({
 
   fetchChannelByHandle: async (handle) => {
     try {
-      set({ isLoading: true });
+      set({ isLoading: true, error:null, channel:null });
       const res = await axios.get(`http://localhost:5000/api/v1/channel/${handle}`);
-
       set({
         channel: res.data.data,
         isLoading: false,
       });
     } catch (err) {
-      set({
+      if(err.response?.status === 404) {
+        set({
+          error: "Channel not found",
+          isLoading: false,
+        })
+      } else {
+        set({
         error: err.response?.data?.message || "Failed to fetch channel",
         isLoading: false,
       });
+      }
     }
   },
 

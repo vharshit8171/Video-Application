@@ -113,7 +113,7 @@ const About = () => {
                     </h2>
                     <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 place-items-center">
                         {[{ name: "React", logo: "https://logo.svgcdn.com/logos/react.svg" },
-                        { name: "Tailwind", logo: "https://logo.svgcdn.com/logos/tailwindcss.svg" },
+                        { name: "Tailwind CSS", logo: "https://logo.svgcdn.com/logos/tailwindcss.svg" },
                         { name: "Node.js", logo: "../src/assets/nodejs-default.png" },
                         { name: "MongoDB", logo: "../src/assets/mongodb-icon.png" },
                         { name: "JWT", logo: "../src/assets/jwt-seeklogo.png" },
@@ -122,7 +122,7 @@ const About = () => {
                                 className="flex flex-col items-center gap-2 backdrop-blur-md bg-white rounded-sm border-2 border-white cursor-pointer px-12 py-8 shadow hover:scale-105 transition">
                                 <img src={tech.logo}
                                     alt={tech.name}
-                                    className="w-18 h-18 object-contain" />
+                                    className="w-20 h-20 object-contain" />
                                 <span className="text-md font-medium text-[#1e2a5a]">
                                     {tech.name}
                                 </span>

@@ -89,11 +89,11 @@ const VideoForm = ({ mode = "upload", formData, handleChange, handleSubmit, isPu
                                     name="videoClip"
                                     accept="video/*"
                                     onChange={(e) => {
-                                        handleChange;
+                                        handleChange(e);
                                         setVideoFile(e.target.files[0])
                                     }}
                                     className="hidden"
-                                    required />
+                                    required={mode  === "upload"} />
                                 <div className={`border-2 border-dashed ${videoFile ?"border-green-700" :"border-zinc-700" } rounded-md p-10  flex flex-col items-center justify-center text-center hover:border-zinc-500 transition`}>
                                     <Video className="w-10 h-10 text-gray-400 mb-3" />
                                     <p className="text-white font-medium">
@@ -125,11 +125,11 @@ const VideoForm = ({ mode = "upload", formData, handleChange, handleSubmit, isPu
                             name="thumbnail"
                             accept="image/*"
                             onChange={(e) => {
-                                handleChange;
+                                handleChange(e);
                                 setThumbnailFile(e.target.files[0]);
                             }}
                             className="hidden"
-                            required />
+                            required = {mode === "upload"} />
 
                         <div className={`border-2 border-dashed ${thumbnailFile ? "border-green-700" : "border-zinc-700"} rounded-md p-8 flex flex-col items-center justify-center text-center hover:border-zinc-500 transition`}>
                             <Image className="w-8 h-8 text-gray-400 mb-2" />

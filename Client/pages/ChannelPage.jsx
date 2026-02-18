@@ -4,6 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useAuthStore } from "../store/authStore.js";
 import { useVideoStore } from "../store/videoStore.js";
 import { useChannelStore } from "../store/channelStore.js";
+import NotFound from "../src/components/ui/NotFound.jsx";
 import PageLoader from "../src/components/ui/PageLoader.jsx"
 import VideoCard from "../src/components/ui/VideoCard.jsx";
 import ConfirmAction from "../src/components/ui/ConfirmAction.jsx";
@@ -17,6 +18,8 @@ const ChannelPage = () => {
   const user = useAuthStore((state) => state.user);
   const channel = useChannelStore((state) => state.channel);
   const fetchChannelByHandle = useChannelStore((state) => state.fetchChannelByHandle);
+  // const isLoading = useChannelStore((state) => state.isLoading);
+  const error = useChannelStore((state) => state.error);
   const fetchOwnerVideos = useVideoStore((state) => state.fetchOwnerVideos);
   const isOwnerVideosLoading = useVideoStore((state) => state.isOwnerVideosLoading);
   const ownerVideosOnly = useVideoStore((state) => state.ownerVideosOnly);
@@ -51,6 +54,7 @@ const ChannelPage = () => {
     }
   };
 
+  if (error === "Channel not found") { return <NotFound />; }
   if (!channel) {
     return (
       <div className="w-screen min-h-screen flex items-center justify-center bg-black text-white">
@@ -73,7 +77,7 @@ const ChannelPage = () => {
         <div className="absolute left-1/2 -bottom-16 -translate-x-1/2">
           <img src={channel.logo}
             alt="Channel Logo"
-            className="w-38 h-38 rounded-full border-4 border-zinc-950 object-cover bg-zinc-800"
+            className="w-46 h-46 rounded-full border-4 border-zinc-950 object-cover bg-zinc-800"
           />
         </div>
       </div>

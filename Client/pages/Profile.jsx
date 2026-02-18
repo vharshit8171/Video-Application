@@ -43,8 +43,8 @@ const Profile = () => {
   };
 
   return (
-    <div className="w-screen min-h-screen bg-black flex justify-center px-3 sm:px-6 lg:px-10 py-6">
-      <div className="w-full max-w-md sm:max-w-2xl lg:max-w-7xl bg-zinc-900/60 backdrop-blur rounded-xs shadow-2xl mt-10 md:mt-20 xl:mt-12 p-4 sm:p-6 lg:pl-10">
+    <div className="w-screen min-h-screen bg-black flex justify-center px-3 sm:px-6 lg:px-10 py-2">
+      <div className="w-full max-w-md sm:max-w-2xl lg:max-w-7xl bg-zinc-900/60 backdrop-blur rounded-xs shadow-2xl mt-10 md:mt-20 xl:mt-14 p-4 sm:p-6 lg:pl-10">
 
         <div className="flex flex-col sm:flex-col md:flex-col lg:flex-row items-center gap-4 sm:gap-6 lg:gap-10 text-center lg:text-left">
           <div className="h-24 w-24 sm:h-28 sm:w-28 md:h-32 md:w-32 rounded-full overflow-hidden border border-slate-900">

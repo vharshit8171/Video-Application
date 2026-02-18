@@ -5,6 +5,7 @@ import { Channel } from "../models/channel.model.js";
 import { User } from "../models/user.model.js";
 import { ApiError } from "../utiles/ApiError.js";
 import { deleteFromCloudinary, UploadOnCloudinary } from "../utiles/Cloudinary.js";
+import fs from "fs";
 
 const createChannel = asyncHandler(async (req, res) => {
     const { name, handle, description, category, website } = req.body;
@@ -34,9 +35,11 @@ const createChannel = asyncHandler(async (req, res) => {
     }
 
     const logoCloudPath = await UploadOnCloudinary(logoPath);
+    await fs.promises.unlink(logoPath); // Remove the local file after uploading to Cloudinary
     let bannerCloudPath = {};
     if (bannerPath) {
         bannerCloudPath = await UploadOnCloudinary(bannerPath);
+        await fs.promises.unlink(bannerPath); // Remove the local file after uploading to Cloudinary
     }
 
     const CreatedChannel = await Channel.create({
@@ -78,7 +81,8 @@ const authChannelByHandle = asyncHandler(async (req, res) => {
     const { handle } = req.params;
     const channel = await Channel.findOne({ handle });
     if (!channel) {
-        throw new ApiError(404, "Channel not found");
+        return res.status(404)
+            .json(new ApiResponse(404, null, "Channel not found"));
     }
     return res
         .status(200)
@@ -99,16 +103,26 @@ const editChannelByHandle = asyncHandler(async (req, res) => {
         }
     });
 
+    const existedChannel = await Channel.findOne(req.channel._id);
+
     if (logoLocalPath) {
         const logoCloudPath = await UploadOnCloudinary(logoLocalPath);
+        await fs.promises.unlink(logoLocalPath);
+        if(existedChannel.logoPublicId){
+            await deleteFromCloudinary(existedChannel.logoPublicId, "image");
+        }
         channel.logo = logoCloudPath.url;
         channel.logoPublicId = logoCloudPath.public_id
     }
 
     if (bannerLocalPath) {
         const bannerCloudPath = await UploadOnCloudinary(bannerLocalPath);
+        await fs.promises.unlink(bannerLocalPath);
+        if(existedChannel?.bannerPublicId){
+            await deleteFromCloudinary(existedChannel.bannerPublicId, "image");
+        }
         channel.banner = bannerCloudPath.url;
-        channel.banner = bannerCloudPath.public_id
+        channel.bannerPublicId = bannerCloudPath.public_id
     }
     await channel.save();
 

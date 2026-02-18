@@ -5,6 +5,7 @@ import { ApiResponse } from "../utiles/ApiResponse.js";
 import { ApiError } from "../utiles/ApiError.js";
 import { deleteFromCloudinary, UploadOnCloudinary } from "../utiles/Cloudinary.js";
 import mongoose from "mongoose";
+import fs from "fs";
 
 const getAllVideos = asyncHandler(async (req, res) => {
     try {
@@ -83,13 +84,14 @@ const publishAVideo = asyncHandler(async (req, res) => {
     const { title, description, category, duration, isPublished } = req.body;
     const videoClip = req.files?.videoClip[0]?.path;
     const thumbnail = req.files?.thumbnail[0]?.path;
-    if ([title, description, category, duration, isPublished, videoClip, thumbnail].some((item) => String(item).trim() === "")) {
+    if (!title || !description || !category || !duration || !videoClip || !thumbnail) {
         // If a feild is non string than trim not works and throw error.
         throw new ApiError(401, "Some feilds are requried");
     }
-
     const videoClipUrl = await UploadOnCloudinary(videoClip);
     const thumbnailUrl = await UploadOnCloudinary(thumbnail);
+    await fs.promises.unlink(videoClip);
+    await fs.promises.unlink(thumbnail);
 
     const video = await Video.create({
         title,
@@ -97,10 +99,10 @@ const publishAVideo = asyncHandler(async (req, res) => {
         category,
         duration,
         videoClip: videoClipUrl?.url || "",
-        videoPublicId:videoClipUrl.public_id,
+        videoPublicId: videoClipUrl.public_id,
         thumbnail: thumbnailUrl?.url || "",
-        thumbnailPublicId:thumbnailUrl.public_id,
-        owner:req.user._id,
+        thumbnailPublicId: thumbnailUrl.public_id,
+        owner: req.user._id,
         isPublished
     });
     const _id = video._id;
@@ -110,8 +112,7 @@ const publishAVideo = asyncHandler(async (req, res) => {
     }
 
     return res
-        .status(200)
-        .cookie("id", _id, options)
+        .status(201)
         .json(
             new ApiResponse(
                 200, video, "Your video pulished successfully!!!"
@@ -165,78 +166,81 @@ const getVideoById = asyncHandler(async (req, res) => {
     }
 })
 
-const getVideoBySearch = asyncHandler(async (req,res) => {
-    const {q,page=1,limit=8} = req.query;
-    if(!q){
-        throw new ApiError(404,"Search Query is requried");}
+const getVideoBySearch = asyncHandler(async (req, res) => {
+    const { q, page = 1, limit = 8 } = req.query;
+    if (!q) {
+        throw new ApiError(404, "Search Query is requried");
+    }
     if (q.trim().length < 4 || !/[a-zA-Z0-9]/.test(q.trim())) {
-    throw new ApiError(400, "Invalid search query");}
+        throw new ApiError(400, "Invalid search query");
+    }
 
     let videos = await Video.find(
         { $text: { $search: q.trim() } },
         { score: { $meta: "textScore" } }
-    ).sort({score:{$meta:"textScore"}});
+    ).sort({ score: { $meta: "textScore" } });
 
-    if(videos.length === 0){
-    // Escape regex special chars
-    const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const regexPattern = escaped.split("").join(".*");
-    const regex = new RegExp(regexPattern, "i");
+    if (videos.length === 0) {
+        // Escape regex special chars
+        const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const regexPattern = escaped.split("").join(".*");
+        const regex = new RegExp(regexPattern, "i");
 
-    videos = await Video.find({
-      $or: [
-        { title: { $regex: regex } },
-        { description: { $regex: regex } },
-        { category: { $regex: regex } }
-      ]
-    })}
+        videos = await Video.find({
+            $or: [
+                { title: { $regex: regex } },
+                { description: { $regex: regex } },
+                { category: { $regex: regex } }
+            ]
+        })
+    }
 
     return res
-    .status(200)
-    .json(
-        new ApiResponse(201,{videos},"Searched Videos!!!")
-    )
+        .status(200)
+        .json(
+            new ApiResponse(201, { videos }, "Searched Videos!!!")
+        )
 })
 
-const getRecommendedVideos = asyncHandler(async (req,res) => {
-    const {videoId} = req.params;
+const getRecommendedVideos = asyncHandler(async (req, res) => {
+    const { videoId } = req.params;
     const recommendedVideos = [];
-    if(!videoId){
-        throw new ApiError(404,"VideoId not found");
+    if (!videoId) {
+        throw new ApiError(404, "VideoId not found");
     }
 
     // Recommend on the basis of users watch History.
     const watchedVideos = req.user.populate("watchHistory.video");
-    if(watchedVideos?.watchHistory?.length){
+    if (watchedVideos?.watchHistory?.length) {
         const historyVideos = watchedVideos.watchHistory
-        .slice(0,10)
-        .map(v => v.video)
-        .filter(Boolean);
+            .slice(0, 10)
+            .map(v => v.video)
+            .filter(Boolean);
         const historyCategory = historyVideos.map(v => v.category);
         const historyOwner = historyVideos.map(v => v.owner);
         const historyBased = await Video.find({
-          _id: {
-            $ne: currentVideo._id,
-            $nin: historyVideos.map(v => v._id)
-          },
-          $or: [
-            { category: { $in: historyCategory } },
-            { owner: { $in: historyOwner } }
-          ]
+            _id: {
+                $ne: currentVideo._id,
+                $nin: historyVideos.map(v => v._id)
+            },
+            $or: [
+                { category: { $in: historyCategory } },
+                { owner: { $in: historyOwner } }
+            ]
         }).limit(10);
         recommendedVideos.push(...historyBased);
     }
 
     // Suggest Videos on the basis of the current playing Videos category or its owner.
     const currentVideo = await Video.findById(videoId);
-    if(!currentVideo){
-        throw new ApiError(404,"Video not found");
+    if (!currentVideo) {
+        throw new ApiError(404, "Video not found");
     }
     const categoryBased = await Video.find({
-        _id: {$ne:videoId},
-        $or:[
-            {category:currentVideo.category},
-            {owner:currentVideo.owner}
+        _id: { $ne: videoId },
+        $or: [
+            { category: currentVideo.category },
+            { owner: currentVideo.owner }
         ]
     }).limit(10);
     recommendedVideos.push(...categoryBased);
@@ -244,18 +248,16 @@ const getRecommendedVideos = asyncHandler(async (req,res) => {
     // Filter out the common results.
     const uniqueVideos = [];
     const seen = new Set();
-     for (const video of recommendedVideos) {
-      if (!seen.has(video._id.toString())) {
-        seen.add(video._id.toString());
-        uniqueVideos.push(video);
-      }
+    for (const video of recommendedVideos) {
+        if (!seen.has(video._id.toString())) {
+            seen.add(video._id.toString());
+            uniqueVideos.push(video);
+        }
     }
 
-    return res
-    .status(200)
-    .json(
-        new ApiResponse(201,{uniqueVideos},"Suggested Videos!!!")
-    )
+    return res.status(200)
+        .json(new ApiResponse(201, { uniqueVideos }, "Suggested Videos!!!")
+        )
 })
 
 const updateVideo = asyncHandler(async (req, res) => {
@@ -283,16 +285,17 @@ const updateVideo = asyncHandler(async (req, res) => {
     });
     if (thumbnailPath) {
         const thumnailUrl = await UploadOnCloudinary(thumbnailPath);
+        await fs.promises.unlink(thumbnailPath);
         updateDetails.thumbnail = thumnailUrl.url;
         updateDetails.thumbnailPublicId = thumnailUrl.public_id
-    } 
+    }
     // The main point to be remeber here is that it is not necceassry that all feilds present are update the doc so we want only those feild update which are provided so  Use findByIdAndUpdate() with { $set: req.body } to only update provided fields.
     const UpdatedVideo = await Video.findByIdAndUpdate(
         id,
         { $set: updateDetails },
         { new: true } // important
     );
-    // important because if video is not found through the id provided by user thsan error,secondly this new object is necessary beacuse through this we only get our newly updated doc without this we get the old doc.
+    // important because if video is not found through the id provided by user than error,secondly this new object is necessary beacuse through this we only get our newly updated doc without this we get the old doc.
     if (!UpdatedVideo) {
         throw new ApiError(404, "Video not found");
     }
@@ -308,16 +311,18 @@ const deleteAVideo = asyncHandler(async (req, res) => {
     const { id } = req.params;
     try {
         if (!id) {
-            throw new ApiError(404, "Bad Request!!!");}
+            throw new ApiError(404, "Bad Request!!!");
+        }
 
         const video = await Video.findById(id);
         if (!video) {
-            throw new ApiError(404, "Video doesnt exist!!!");}
+            throw new ApiError(404, "Video doesnt exist!!!");
+        }
 
-        await deleteFromCloudinary(video.videoPublicId,"video");
-        await deleteFromCloudinary(video.thumbnailPublicId,"image");    
+        await deleteFromCloudinary(video.videoPublicId, "video");
+        await deleteFromCloudinary(video.thumbnailPublicId, "image");
         await Video.deleteOne(video);
-        
+
         return res
             .status(200)
             .json(
@@ -366,4 +371,4 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
         )
 })
 
-export { getAllVideos,publishAVideo,getOwnerVideos, getVideoById,getVideoBySearch,getRecommendedVideos,updateVideo, deleteAVideo,togglePublishStatus }
+export { getAllVideos, publishAVideo, getOwnerVideos, getVideoById, getVideoBySearch, getRecommendedVideos, updateVideo, deleteAVideo, togglePublishStatus }
