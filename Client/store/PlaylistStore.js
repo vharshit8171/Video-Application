@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import axios from "axios";
 
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 export const usePlaylistStore = create((set, get) => ({
     playlists: [],
     currentPlaylist: [],
@@ -11,7 +13,7 @@ export const usePlaylistStore = create((set, get) => ({
         try {
             set({ isLoading: true, error: null });
 
-            const res = await axios.get("http://localhost:5000/api/v1/playlist/user/my", { withCredentials: true });
+            const res = await axios.get(`${BASE_URL}/playlist/user/my`, { withCredentials: true });
             set({
                 playlists: res.data.data,
                 isLoading: false,
@@ -30,7 +32,7 @@ export const usePlaylistStore = create((set, get) => ({
         try {
             set({ isLoading: true, error: null });
 
-            const res = await axios.post(`http://localhost:5000/api/v1/playlist/create-playlist/:userId`, { name, description },
+            const res = await axios.post(`${BASE_URL}/playlist/create-playlist`, { name, description },
                 { withCredentials: true });
 
             const newPlaylist = res.data.data;
@@ -52,7 +54,7 @@ export const usePlaylistStore = create((set, get) => ({
     getPlaylistById: async (playlistId) => {
         try {
             set({ isLoading: true, error: null, currentPlaylist: null });
-            const res = await axios.get(`http://localhost:5000/api/v1/playlist/getplaylist/${playlistId}`,
+            const res = await axios.get(`${BASE_URL}/playlist/getplaylist/${playlistId}`,
                 { withCredentials: true });
 
             set({
@@ -74,11 +76,10 @@ export const usePlaylistStore = create((set, get) => ({
     addVideoToPlaylists: async (videoId,playlistIds) => {
         try {
             set({isLoading:true})
-            const res = await axios.patch(`http://localhost:5000/api/v1/playlist/${videoId}/add-video`,
+             await axios.patch(`${BASE_URL}/playlist/${videoId}/add-video`,
                 {playlistIds},
                 {withCredentials:true}
             );
-            console.log("res",res);
             set({
                 isLoading:false
             })
@@ -93,7 +94,7 @@ export const usePlaylistStore = create((set, get) => ({
     removeVideoFromPlaylist: async (playlistId,videoId) => {
         try {
             set({isLoading:true});
-            const res = await axios.patch(`http://localhost:5000/api/v1/playlist/${playlistId}/remove-video/${videoId}`,
+            const res = await axios.patch(`${BASE_URL}/playlist/${playlistId}/remove-video/${videoId}`,
             {},    
             {withCredentials:true});
             const updatedPlaylist = res.data.data;
@@ -117,7 +118,7 @@ export const usePlaylistStore = create((set, get) => ({
     deletePlaylist: async (playlistId) => {
         try {
             set({ isLoading: true });
-            await axios.delete(`http://localhost:5000/api/v1/playlist/delete-playlist/${playlistId}`,
+            await axios.delete(`${BASE_URL}/playlist/delete-playlist/${playlistId}`,
                 { withCredentials: true }
             );
             set((state) => ({

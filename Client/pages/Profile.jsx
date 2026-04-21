@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-import {LogOut, Pencil, ArrowDownToLine, FolderCog,
-  Podcast, BadgeInfo, HeartPlus} from "lucide-react";
+import {
+  LogOut, Pencil, ArrowDownToLine, FolderCog,
+  Podcast, BadgeInfo, HeartPlus
+} from "lucide-react";
 import { useAuthStore } from "../store/authStore.js";
 import { useChannelStore } from "../store/channelStore.js";
 import { useVideoStore } from "../store/videoStore.js";
@@ -44,7 +46,7 @@ const Profile = () => {
 
   return (
     <div className="w-screen min-h-screen bg-black flex justify-center px-3 sm:px-6 lg:px-10 py-2">
-      <div className="w-full max-w-md sm:max-w-2xl lg:max-w-7xl bg-zinc-900/60 backdrop-blur rounded-xs shadow-2xl mt-10 md:mt-20 xl:mt-14 p-4 sm:p-6 lg:pl-10">
+      <div className="w-full max-w-md sm:max-w-2xl lg:max-w-7xl bg-zinc-900/60 backdrop-blur rounded-xs shadow-2xl mt-10 md:mt-20 xl:mt-16 p-4 sm:p-6 lg:pl-10">
 
         <div className="flex flex-col sm:flex-col md:flex-col lg:flex-row items-center gap-4 sm:gap-6 lg:gap-10 text-center lg:text-left">
           <div className="h-24 w-24 sm:h-28 sm:w-28 md:h-32 md:w-32 rounded-full overflow-hidden border border-slate-900">
@@ -111,9 +113,8 @@ const Profile = () => {
               My Watchlist
             </h3>
           </div>
-
           <div className="flex gap-3 overflow-x-auto py-1 scrollbar-hide">
-            {watchHistory.map(item => (
+            {watchHistory.filter(item => item.video).map(item => (
               <VideoCard key={item.video._id} video={item.video} variant="compact" />
             ))}
           </div>
@@ -121,8 +122,8 @@ const Profile = () => {
 
         <div className="mt-7 border-t border-zinc-800 pt-5">
           <ul className="space-y-2 text-xs sm:text-sm text-zinc-400">
-            <li onClick={()=>{navigate("/playlist")}} 
-            className="hover:text-white"><FolderCog size={16} className="inline mr-2 cursor-pointer" /> My Playlist</li>
+            <li onClick={() => { navigate("/playlist") }}
+              className="hover:text-white"><FolderCog size={16} className="inline mr-2 cursor-pointer" /> My Playlist</li>
             <li className="hover:text-white"><ArrowDownToLine size={16} className="inline mr-2" /> Downloads</li>
             <li className="hover:text-white"><HeartPlus size={16} className="inline mr-2" /> Liked</li>
             <li className="hover:text-white"><Podcast size={16} className="inline mr-2" /> Subscription</li>

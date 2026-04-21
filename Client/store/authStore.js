@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import axios from 'axios';
 
+const BASE_URL = import.meta.env.VITE_API_BASE_URL; 
+
 export const useAuthStore = create((set) => ({
     user: null,
     watchHistory:[],
@@ -14,7 +16,7 @@ export const useAuthStore = create((set) => ({
     register: async (userData) => {
         set({ isLoading: true, error: null });
         try {
-            const response = await axios.post('http://localhost:5000/api/v1/user/register', userData, {
+            const response = await axios.post(`${BASE_URL}/user/register`, userData, {
                 withCredentials: true,
                 headers: { "Content-Type": "multipart/form-data" }
             });
@@ -37,7 +39,7 @@ export const useAuthStore = create((set) => ({
     login: async (credentials) => {
         set({ isLoading: true, error: null });
         try {
-            const response = await axios.post('http://localhost:5000/api/v1/user/login', credentials, { withCredentials: true });
+            const response = await axios.post(`${BASE_URL}/user/login`, credentials, { withCredentials: true });
             set({
                 user: response.data.data,
                 isAuthenticated: true,
@@ -56,7 +58,7 @@ export const useAuthStore = create((set) => ({
     logout: async () => {
         set({ isLoading: true, error: null });
         try {
-            await axios.post('http://localhost:5000/api/v1/user/logout', {}, { withCredentials: true });
+            await axios.post(`${BASE_URL}/user/logout`, {}, { withCredentials: true });
             set({
                 user: null,
                 isAuthenticated: false,
@@ -110,7 +112,7 @@ export const useAuthStore = create((set) => ({
 
         set({ isLoading: true, error: null });
         try {
-            const response = await axios.get('http://localhost:5000/api/v1/auth/me', { withCredentials: true });
+            const response = await axios.get(`${BASE_URL}/auth/me`, { withCredentials: true });
             const user = response.data?.data?.user || null;
             set({
                 user,
@@ -133,14 +135,14 @@ export const useAuthStore = create((set) => ({
     updateProfile: async (formData) => {
         set({ isLoading: true, error: null, profileUpdated: false });
         try {
-            const res = await axios.patch("http://localhost:5000/api/v1/user/updateCredentials", formData, {
+            const res = await axios.patch(`${BASE_URL}/user/updateCredentials`, formData, {
                 withCredentials: true,
                 headers: {
                     "Content-Type": "multipart/form-data",
                 },
             });
             set({
-                user: res.data.data,
+                user: res.data.data.user,
                 isLoading: false,
                 profileUpdated: true,
             });
@@ -155,7 +157,7 @@ export const useAuthStore = create((set) => ({
     deleteAccount: async () => {
         set({ isLoading: true, error: null })
         try {
-            await axios.delete("http://localhost:5000/api/v1/user/delete-account", {
+            await axios.delete(`${BASE_URL}/user/delete-account`, {
                 withCredentials: true
             });
             set({
@@ -178,7 +180,7 @@ export const useAuthStore = create((set) => ({
     fetchWatchHistory: async () => {
         set({isLoading:true,error:null});
         try {
-            const res = await axios.get("http://localhost:5000/api/v1/user/history",{
+            const res = await axios.get(`${BASE_URL}/user/history`,{
                 withCredentials:true
             });
             set({
@@ -195,5 +197,4 @@ export const useAuthStore = create((set) => ({
  
 
     resetProfileUpdated: () => set({ profileUpdated: false }),
-
 }));

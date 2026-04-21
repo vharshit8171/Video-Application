@@ -1,12 +1,16 @@
+import fs from 'fs';
+import dotenv from "dotenv";
+import jwt from 'jsonwebtoken'
+import { User } from '../models/user.model.js'
+import { ApiError } from '../utiles/ApiError.js'
+import { Video } from "../models/video.model.js";
 import asyncHandler from '../utiles/asyncHandler.js'
 import { ApiResponse } from '../utiles/ApiResponse.js'
-import { ApiError } from '../utiles/ApiError.js'
-import { User } from '../models/user.model.js'
-import { Video } from "../models/video.model.js";
 import { Channel } from "../models/channel.model.js";
 import { deleteFromCloudinary, UploadOnCloudinary } from '../utiles/Cloudinary.js'
-import jwt from 'jsonwebtoken'
-import fs from 'fs';
+
+dotenv.config();
+
 // {
 //     "username" : "Harshit verma",
 //     "email": "harshitv@8171gmail.com",
@@ -83,7 +87,7 @@ const userRegister = asyncHandler(async (req, res) => {
 
     const options = {
         httpOnly: true,
-        secure: false,      // ❌ set to false for localhost
+        secure: process.env.NODE_ENV === "production",      // ❌ set to false for localhost
         sameSite: "Lax",    // 👈 recommended for local dev
     }
 
@@ -105,12 +109,12 @@ const userLogin = asyncHandler(async (req, res) => {
     // sent them to user either as cookie and save them  into db
 
     let { username, email, password } = req.body;
-    if ([username, email, password].some((item) => { item?.trim() === '' })) {
+    if ([username, email, password].some((item) => !item || item.trim() === '' )) {
         throw new ApiError(401, 'All feilds are requried');
     }
 
     let user = await User.findOne({
-        $or: [{ email }]
+        $and: [{ username }, { email }]
     })
     if (!user) {
         throw new ApiError(404, 'User does not exists');
@@ -126,7 +130,7 @@ const userLogin = asyncHandler(async (req, res) => {
     const LoggedInUser = await User.findById(user._id).select('-password  -refreshToken').populate('channel');
     const options = {
         httpOnly: true,
-        secure: false,      // ❌ set to false for localhost
+        secure: process.env.NODE_ENV === "production", // ❌ set to false for localhost
         sameSite: "Lax",    // 👈 recommended for local dev
     }
     //To set the cookie we uses the res.cookie and to read the cookiw we uses the req.cookie
@@ -167,20 +171,20 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
             throw new ApiError(401, 'Refresh Token is expired')
         }
 
-        const { accessToken, newRefreshToken } = await genrateAccessAndRefreshTokens(user._id);
+        const { accessToken, refreshToken } = await genrateAccessAndRefreshTokens(user._id);
         const options = {
             httpOnly: true,
-            secure: true
+            secure: process.env.NODE_ENV === "production"
         }
 
         return res
-            .status(201)
+            .status(200)
             .cookie("accessToken", accessToken, options)
-            .cookie("newRefreshToken", newRefreshToken, options)
+            .cookie("refreshToken", refreshToken, options)
             .json(
                 new ApiResponse(
                     200,
-                    { accessToken, refreshToken: newRefreshToken },
+                    { accessToken, refreshToken: refreshToken },
                     'AccessToken refreshed successfully!!!'
                 ))
     } catch (error) {
@@ -194,8 +198,8 @@ const userLogout = asyncHandler(async (req, res) => {
     await User.findByIdAndUpdate(
         req.user._id,
         {
-            $set: {
-                refreshToken: undefined
+            $unset: {
+                refreshToken: 1
             }
         },
         {
@@ -204,11 +208,11 @@ const userLogout = asyncHandler(async (req, res) => {
     )
     const options = {
         httpOnly: true,
-        secure: false,      // ❌ set to false for localhost
+        secure: process.env.NODE_ENV === "production", // ❌ set to false for localhost
         sameSite: "Lax",    // 👈 recommended for local dev
     }
     return res
-        .status(201)
+        .status(200)
         .clearCookie("accessToken", options)
         .clearCookie("refreshToken", options)
         .json(new ApiResponse(200, {}, 'User Loggout successfully'));
@@ -239,7 +243,7 @@ const getWatchHistory = asyncHandler(async (req, res) => {
         .populate("watchHistory.video");
     return res
         .status(200)
-        .json(new ApiResponse(201, { user }, "Watched Videos!!!"));
+        .json(new ApiResponse(200, { user }, "Watched Videos!!!"));
 })
 
 const updatePassword = asyncHandler(async (req, res) => {
@@ -258,7 +262,7 @@ const updatePassword = asyncHandler(async (req, res) => {
 
     const isPasswordValid = await user.ispasswordCorrect(oldPassword);
     if (isPasswordValid === false) {
-        throw new ApiError(402, 'Password is incorrect');
+        throw new ApiError(401, 'Password is incorrect');
     }
 
     user.password = newPassword;
@@ -286,7 +290,7 @@ const updateCredentials = asyncHandler(async (req, res) => {
     if (location) updatedCredentials.location = location;
     if (contact_number) updatedCredentials.contact_number = contact_number;
 
-    const existedUser = await User.findOne(req.user._id);
+    const existedUser = await User.findById(req.user._id);
 
     if (req.file?.path) {
 
@@ -344,12 +348,15 @@ const deleteUser = asyncHandler(async (req, res) => {
         }
     }
 
-    await User.findByIdAndDelete(userId);
-    res.clearCookie("token", {
+    const options = {
         httpOnly: true,
-        secure: true,
+        secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
-    });
+    }
+
+    await User.findByIdAndDelete(userId);
+    res.clearCookie("accessToken",options);
+    res.clearCookie("refreshToken",options);
 
     return res
         .status(200)

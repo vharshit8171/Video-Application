@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import axios from "axios";
 
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 export const useChannelStore = create((set, get) => ({
   channel: null,
   isChannelChecked: false,
@@ -11,7 +13,7 @@ export const useChannelStore = create((set, get) => ({
   createChannel: async (formData) => {
     try {
       set({ isLoading: true, error: null });
-      const res = await axios.post("http://localhost:5000/api/v1/channel/create", formData,
+      const res = await axios.post(`${BASE_URL}/channel/create`, formData,
         {
           withCredentials: true,
           headers: {
@@ -40,7 +42,7 @@ export const useChannelStore = create((set, get) => ({
 
     try {
       const res = await axios.get(
-        "http://localhost:5000/api/v1/channel/auth",
+        `${BASE_URL}/channel/auth`,
         {withCredentials:true}
       );
       set({
@@ -60,7 +62,7 @@ export const useChannelStore = create((set, get) => ({
   fetchChannelByHandle: async (handle) => {
     try {
       set({ isLoading: true, error:null, channel:null });
-      const res = await axios.get(`http://localhost:5000/api/v1/channel/${handle}`);
+      const res = await axios.get(`${BASE_URL}/channel/${handle}`);
       set({
         channel: res.data.data,
         isLoading: false,
@@ -83,7 +85,7 @@ export const useChannelStore = create((set, get) => ({
   editChannel: async (formData) => {
     try {
       set({ isLoading: true, error: null });
-      const res = await axios.patch(`http://localhost:5000/api/v1/channel/${formData.handle}/edit`, formData,
+      const res = await axios.patch(`${BASE_URL}/channel/${formData.handle}/edit`, formData,
         {
           withCredentials: true,
           headers: {
@@ -106,8 +108,8 @@ export const useChannelStore = create((set, get) => ({
   deleteChannel: async (handle) => {
   try {
     set({ isLoading: true, error: null });
-    await axios.get(
-      `http://localhost:5000/api/v1/channel/${handle}/delete`,
+    await axios.delete(
+      `${BASE_URL}/channel/${handle}/delete`,
       { withCredentials: true }
     );
     set({

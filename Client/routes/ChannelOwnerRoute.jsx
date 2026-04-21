@@ -15,7 +15,7 @@ const ChannelOwnerRoute = ({ children }) => {
     toast.error("You don't have a channel yet");
     return <Navigate to="/upload/create" />;
   }
-  if (user.channel._id !== channel._id) {
+  if (!user.channel || user.channel._id !== channel._id) {
     toast.error("You are not authorized to access this page");
     return <Navigate to="/home" replace />;
   }

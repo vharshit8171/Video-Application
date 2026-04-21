@@ -11,7 +11,7 @@ const ConfirmAction = ({
 }) => {
 
   return (
-    <div className="w-[98vw] h-screen fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+    <div className="w-[95vw] h-[94vh] fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="w-full max-w-md rounded-xs bg-zinc-900 p-6 text-white shadow-lg">
         
         <h2 className="text-2xl font-semibold">{title}</h2>

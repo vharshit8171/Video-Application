@@ -1,6 +1,7 @@
+import toast from "react-hot-toast";
+import LoginImg from "../src/assets/Login.png";
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import toast from "react-hot-toast";
 import { Mail, Lock, User } from "lucide-react";
 import { useAuthStore } from "../store/authStore.js";
 
@@ -47,14 +48,14 @@ const LogIn = () => {
       <div className="w-full max-w-xs px-5 sm:max-w-sm md:max-w-xl xl:max-w-md bg-zinc-900 rounded-sm shadow-lg sm:p-8 md:px-8 md:py-7 xl:py-3 max-h-[85vh] flex flex-col justify-center">
         
         <h2 className="text-white text-xl sm:text-4xl font-semibold text-center mb-3 xl:mb-0 py-3">
-          Login Your Account
+          Login Account
         </h2>
 
         <div className="flex justify-center mb-7 xl:mb-4">
           <div className="w-28 h-22 sm:w-30 sm:h-30 md:w-54 md:h-35 flex items-center justify-center">
             <img
               className="w-38 h-32 sm:w-30 sm:h-30 md:w-50 md:h-52 xl:w-54 xl:h-50"
-              src="../src/assets/Login.png"
+              src={LoginImg}
               alt="App Logo"/>
           </div>
         </div>

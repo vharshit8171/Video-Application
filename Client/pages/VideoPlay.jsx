@@ -1,37 +1,38 @@
 import axios from "axios";
 import { useState, useEffect } from "react";
-import { ThumbsUp, ThumbsDown, Bookmark } from "lucide-react";
+import { Bookmark } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import PageLoader from "../src/components/ui/PageLoader.jsx";
-import SavevideoModel from "../src/components/ui/SavevideoModel.jsx";
+import SaveVideoModel from "../src/components/ui/SaveVideoModel.jsx";
 import RecommendedVideos from "../src/components/ui/RecommendedVideos.jsx";
-import { useAuthStore } from "../store/authStore.js";
 import { useVideoStore } from "../store/videoStore.js";
 import { usePlaylistStore } from "../store/PlaylistStore.js";
 
 const VideoPlay = () => {
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
   const { id } = useParams();
   const navigate = useNavigate();
   const [openSaveModal, setOpenSaveModal] = useState(false);
 
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const currentVideo = useVideoStore((state) => state.currentVideo);
   const getVideoById = useVideoStore((state) => state.getVideoById);
   const isLoading = useVideoStore((state) => state.isLoading);
   const fetchUserPlaylist = usePlaylistStore((state) => state.fetchUserPlaylist)
 
   useEffect(() => {
-    const updateWatch = async () => {
-      if (id && isAuthenticated) {
-        await axios.post(`http://localhost:5000/api/v1/user/history/${id}`, {}, {
+    const fetchVideo = async () => {
+      const video = await getVideoById(id);
+
+      if (video) {
+        await axios.post(`${BASE_URL}/user/history/${id}`, {}, {
           withCredentials: true
         });
       }
-    }
+    };
 
-    getVideoById(id);
-    updateWatch();
-  }, [id, isAuthenticated, getVideoById]);
+    fetchVideo();
+  }, [id, BASE_URL, getVideoById]);
 
   if (isLoading || !currentVideo) {
     return (
@@ -72,19 +73,10 @@ const VideoPlay = () => {
 
               <button onClick={() => {
                 fetchUserPlaylist();
-                setOpenSaveModal(true) }}
+                setOpenSaveModal(true)
+              }}
                 className="w-12 h-12 xl:w-14 xl:h-14 flex items-center justify-center bg-zinc-600 cursor-pointer text-white rounded-full hover:bg-white hover:text-black hover:scale-[1.1] transition">
                 <Bookmark size={32} />
-              </button>
-
-              <button
-                className="w-12 h-12 xl:w-14 xl:h-14 flex items-center justify-center bg-zinc-600 cursor-pointer text-white rounded-full hover:bg-white hover:text-black hover:scale-[1.1] transition">
-                <ThumbsUp size={32} />
-              </button>
-
-              <button
-                className="w-12 h-12 xl:w-14 xl:h-14 flex items-center justify-center bg-zinc-600 cursor-pointer text-white rounded-full hover:bg-white hover:text-black hover:scale-[1.1] transition">
-                <ThumbsDown size={32} />
               </button>
 
             </div>
@@ -92,7 +84,7 @@ const VideoPlay = () => {
         </div>
       </div>
 
-      <SavevideoModel
+      <SaveVideoModel
         isOpen={openSaveModal}
         onClose={() => setOpenSaveModal(false)}
         videoId={currentVideo._id}

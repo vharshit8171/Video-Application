@@ -46,7 +46,7 @@ const Playlists = () => {
                 onClick={() => { navigate(`/playlist/${playlist._id}`) }}
                 className="group cursor-pointer">
                 <div className="relative aspect-video rounded-sm overflow-hidden bg-gray-800">
-                  <img src={playlist?.videos[0]?.thumbnail || "https://images.unsplash.com/photo-1555066931-4365d14bab8c"}
+                  <img src={playlist?.videos[0]?.thumbnail || "https://i.pinimg.com/1200x/91/bc/84/91bc843c111bd901f9189eeadc78621c.jpg"}
                     alt={playlist.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition" />
 

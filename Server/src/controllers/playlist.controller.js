@@ -25,7 +25,7 @@ const createPlaylist = asyncHandler(async (req, res) => {
 });
 
 const getUserPlaylist = asyncHandler(async (req, res) => {
-    const { _id } = req.user._id;
+    const _id = req.user._id;
     if (!_id) {
         throw new ApiError(400, "User ID is required");
     }
@@ -178,7 +178,7 @@ const deletePlaylist = asyncHandler(async (req, res) => {
 
     return res.status(200)
         .json(
-            new ApiResponse(200, deletePlaylist, "Playlist deleted successfully!!!")
+            new ApiResponse(200, {}, "Playlist deleted successfully!!!")
         )
 })
 

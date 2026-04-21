@@ -162,8 +162,8 @@ const EditProfile = () => {
             disabled={isLoading}
             className={`w-full py-2.5 mt-2 font-semibold rounded-xs transition cursor-pointer
             ${isLoading
-                ? "bg-zinc-400 text-zinc-600 cursor-not-allowed"
-                : "bg-zinc-500 hover:bg-zinc-400 text-black"
+                ? "bg-zinc-300 text-zinc-600 cursor-not-allowed"
+                : "bg-zinc-200 hover:bg-zinc-300 text-black"
               }`}>
             {isLoading ? "Updating..." : "Save Changes"}
           </button>

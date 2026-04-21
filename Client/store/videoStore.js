@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import axios from "axios";
 
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 export const useVideoStore = create((set) => ({
     totalPages: 0,
     homeVideos: [],
@@ -16,7 +18,7 @@ export const useVideoStore = create((set) => ({
     fetchHomeVideos: async (currentPage = 1, videosPerPage = 8) => {
         set({ isLoading: true, error: null });
         try {
-            const homeVideo = await axios.get(`http://localhost:5000/api/v1/video/getAllVideos?page=${currentPage}&limit=${videosPerPage}`, { withCredentials: true });
+            const homeVideo = await axios.get(`${BASE_URL}/video/getAllVideos?page=${currentPage}&limit=${videosPerPage}`, { withCredentials: true });
             set({
                 homeVideos: homeVideo.data.data.videos,
                 totalPages: homeVideo.data.data.totalPages,
@@ -34,7 +36,7 @@ export const useVideoStore = create((set) => ({
     fetchOwnerVideos: async (handle) => {
         set({ isOwnerVideosLoading: true, error: null });
         try {
-            const res = await axios.get(`http://localhost:5000/api/v1/video/channel/${handle}/videos`);
+            const res = await axios.get(`${BASE_URL}/video/channel/${handle}/videos`);
             set({
                 isOwnerVideosLoading: false,
                 ownerVideosOnly: res.data.data,
@@ -50,7 +52,7 @@ export const useVideoStore = create((set) => ({
     uploadVideo: async (handle, formData) => {
         set({ isLoading: true, error: null });
         try {
-            const res = await axios.post(`http://localhost:5000/api/v1/video/${handle}/publishVideo`, formData,
+            const res = await axios.post(`${BASE_URL}/video/${handle}/publishVideo`, formData,
                 {
                     withCredentials: true,
                     headers: { "Content-Type": "multipart/form-data" }
@@ -72,7 +74,7 @@ export const useVideoStore = create((set) => ({
         set({ isLoading: true, error: null });
         try {
             const res = await axios.patch(
-                `http://localhost:5000/api/v1/video/${handle}/updateVideo/${videoId}`, formData,
+                `${BASE_URL}/video/${handle}/updateVideo/${videoId}`, formData,
                 {
                     withCredentials: true,
                     headers: { "Content-Type": "multipart/form-data" }
@@ -95,13 +97,14 @@ export const useVideoStore = create((set) => ({
     getVideoById: async (id) => {
         set({ isLoading: true, error: null });
         try {
-            const res = await axios.get(`http://localhost:5000/api/v1/video/getVideo/${id}`, {
+            const res = await axios.get(`${BASE_URL}/video/getVideo/${id}`, {
                 withCredentials: true,
             });
             set({
                 isLoading: false,
                 currentVideo: res.data.data,
             });
+            return res;
         } catch (error) {
             set({
                 isLoading: false,
@@ -113,7 +116,7 @@ export const useVideoStore = create((set) => ({
     getSearchVideos: async (searchQuery) => {
         set({isLoading:true,error:null});
         try {
-            const res = await axios.get(`http://localhost:5000/api/v1/video/search?q=${encodeURIComponent(searchQuery)}&page=1&limit=8`);
+            const res = await axios.get(`${BASE_URL}/video/search?q=${encodeURIComponent(searchQuery)}&page=1&limit=8`);
             set({
                 isLoading:false,
                 searchedVideos:res.data.data.videos,
@@ -129,7 +132,7 @@ export const useVideoStore = create((set) => ({
     deleteVideo: async (handle, videoId) => {
         set({ isLoading: true });
         try {
-            await axios.get(`http://localhost:5000/api/v1/video/${handle}/deleteVideo/${videoId}`, { withCredentials: true });
+            await axios.delete(`${BASE_URL}/video/${handle}/deleteVideo/${videoId}`, { withCredentials: true });
             set((state) => ({
                 isLoading: false,
                 homeVideos: state.homeVideos.filter(v => v._id !== videoId),
@@ -147,7 +150,7 @@ export const useVideoStore = create((set) => ({
     getRecommendedVideos: async(videoId) => {
         set({isrecommendedLoading:true,error:null})
         try {
-            const res = await axios.get(`http://localhost:5000/api/v1/video/recommended/${videoId}`,{
+            const res = await axios.get(`${BASE_URL}/video/recommended/${videoId}`,{
                 withCredentials:true
             });
             set({

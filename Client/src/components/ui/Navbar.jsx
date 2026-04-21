@@ -80,7 +80,7 @@ const Navbar = () => {
 
             <button
               onClick={() => setOpenConfirm(true)}
-              className="flex items-center gap-1 px-2 py-2 sm:px-3 sm:py-2 md:px-4 md:py-3 text-sm sm:text-base md:text-lg text-black border border-white/20 rounded-xs cursor-pointer transition-transform duration-300 ease-out hover:-translate-y-0.5 bg-white/70 font-semibold backdrop-blur-md shadow-[0_8px_25px_rgba(168,85,247,0.3)] hover:shadow-[0_14px_40px_rgba(168,85,247,0.45)]">
+              className="flex items-center gap-1 px-2 py-2 sm:px-3 sm:py-2 md:px-4 md:py-3 text-sm sm:text-base md:text-lg text-black border border-white/20 rounded-xs cursor-pointer transition-transform duration-300 ease-out hover:-translate-y-0.5 bg-white/85 font-semibold backdrop-blur-md shadow-[0_8px_25px_rgba(168,85,247,0.3)] hover:shadow-[0_14px_40px_rgba(168,85,247,0.45)]">
               <LogOut size={16} />
               <span className="hidden sm:inline">Logout</span>
             </button>
@@ -100,7 +100,7 @@ const Navbar = () => {
         {!isAuthenticated && isLandingPage && (
           <Link to="/login" className="cursor-pointer">
             <button
-              className="px-3 py-2 sm:px-5 sm:py-2.5 text-sm sm:text-xl font-semibold text-black border border-white/20 rounded-xs cursor-pointer transition-transform duration-300 ease-out hover:-translate-y-0.5 bg-white/70 backdrop-blur-md shadow-[0_8px_25px_rgba(168,85,247,0.3)] hover:shadow-[0_14px_40px_rgba(168,85,247,0.45)]">
+              className="px-3 py-2 sm:px-5 sm:py-2.5 text-sm sm:text-xl font-semibold text-black border border-white/20 rounded-xs cursor-pointer transition-transform duration-300 ease-out hover:-translate-y-0.5 bg-white/85 backdrop-blur-md shadow-[0_8px_25px_rgba(168,85,247,0.3)] hover:shadow-[0_14px_40px_rgba(168,85,247,0.45)]">
               Login
             </button>
           </Link>

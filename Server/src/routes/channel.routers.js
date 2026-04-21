@@ -21,7 +21,7 @@ router.route("/:handle/edit")
     { name: "logo", maxCount: 1 },
     { name: "banner", maxCount: 1 },
 ]), editChannelByHandle);
-router.route("/:handle/delete").get(
+router.route("/:handle/delete").delete(
     verifyJWT,
     isChannelOwner,
     deleteChannelByHandle

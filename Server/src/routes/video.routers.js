@@ -22,7 +22,7 @@ router.route('/:handle/updateVideo/:id').patch(
     isChannelOwner,
     uploadMulter.single('thumbnail'),
     updateVideo);
-router.route('/:handle/deleteVideo/:id').get(
+router.route('/:handle/deleteVideo/:id').delete(
     verifyJWT,
     isChannelOwner,
     deleteAVideo);

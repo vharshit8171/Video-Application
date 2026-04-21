@@ -1,11 +1,12 @@
+import fs from "fs";
+import mongoose from "mongoose";
 import asyncHandler from "../utiles/asyncHandler.js";
+import { User } from '../models/user.model.js'
 import { Video } from "../models/video.model.js";
 import { Channel } from "../models/channel.model.js";
 import { ApiResponse } from "../utiles/ApiResponse.js";
 import { ApiError } from "../utiles/ApiError.js";
 import { deleteFromCloudinary, UploadOnCloudinary } from "../utiles/Cloudinary.js";
-import mongoose from "mongoose";
-import fs from "fs";
 
 const getAllVideos = asyncHandler(async (req, res) => {
     try {
@@ -34,51 +35,50 @@ const getAllVideos = asyncHandler(async (req, res) => {
     }
 })
 
-const searchedVideos = asyncHandler(async (req, res) => {
-    // This contoller is simply performs the task to return the viedos now we have to understand this that there are various ways using that users can search the videos like through the partial title,category and we have to return the response with an limited amount so we have to control the pagination.
-    // When user search something in the form of string than that part comes in url after the ? and we can extract that part through the req.query.
-    try {
-        const { search, category, page = 1, limit = 10 } = req.query;
+// const searchedVideos = asyncHandler(async (req, res) => {
+//     // This contoller is simply performs the task to return the viedos now we have to understand this that there are various ways using that users can search the videos like through the partial title,category and we have to return the response with an limited amount so we have to control the pagination.
+//     // When user search something in the form of string than that part comes in url after the ? and we can extract that part through the req.query.
+//     try {
+//         const { search, category, page = 1, limit = 10 } = req.query;
 
-        // This object helps us to filter our result.
-        const obj = { isPublished: true };
+//         // This object helps us to filter our result.
+//         const obj = { isPublished: true };
 
-        // We have to keep in mind that when user search something it is not necessary it gives the exact title so we uses an mongodb operator i.e $regex which stands for regular expression and it helps us to search the partial match feild:{$regex:pattern} in this syntax feild says in which part we have to partial seach and pattern is the string on the basis we are trying to search.5
-        if (search) {
-            // "Add a condition to the query that says: only include videos where the title field matches this regular expression."
-            /* {
-            isPublished: true,
-                title: {
-                $regex: "funny",
-                $options: "i"
-                }
-            }*/
-            obj.title = { $regex: search, $options: "i" };
-        }
-        if (category) {
-            obj.category = category;
-        }
+//         // We have to keep in mind that when user search something it is not necessary it gives the exact title so we uses an mongodb operator i.e $regex which stands for regular expression and it helps us to search the partial match feild:{$regex:pattern} in this syntax feild says in which part we have to partial seach and pattern is the string on the basis we are trying to search.5
+//         if (search) {
+//             // "Add a condition to the query that says: only include videos where the title field matches this regular expression."
+//             /* {
+//             isPublished: true,
+//                 title: {
+//                 $regex: "funny",
+//                 $options: "i"
+//                 }
+//             }*/
+//             obj.title = { $regex: search, $options: "i" };
+//         }
+//         if (category) {
+//             obj.category = category;
+//         }
 
-        // countDocument is an mongodb function to count the documents on the basis of the filtering object obj,skip(),sort(),limit() these are also the methods of the mongodb where skip tells how many intial doc we have to leave,sort helps to sort all the docs the basis of a particular feild passed as an argument. 
-        const sortBy = { createdAt: -1 }
-        const skip = (Number(page) - 1) * Number(limit)
-        const totalVideos = await Video.countDocuments(obj);
+//         // countDocument is an mongodb function to count the documents on the basis of the filtering object obj,skip(),sort(),limit() these are also the methods of the mongodb where skip tells how many intial doc we have to leave,sort helps to sort all the docs the basis of a particular feild passed as an argument. 
+//         const sortBy = { createdAt: -1 }
+//         const skip = (Number(page) - 1) * Number(limit)
+//         const totalVideos = await Video.countDocuments(obj);
 
-        const videos = await Video.find(obj)
-            .sort(sortBy)
-            .skip(skip)
-            .limit(parseInt(limit));
+//         const videos = await Video.find(obj)
+//             .sort(sortBy)
+//             .skip(skip)
+//             .limit(parseInt(limit));
 
-        return res
-            .status(200)
-            .json(
-                new ApiResponse(201, videos, 'Searched Videos!!!'),
-                totalVideos
-            )
-    } catch (error) {
-        throw new ApiError(401, error.message);
-    }
-})
+//         return res
+//             .status(200)
+//             .json(
+//                 new ApiResponse(201, {videos,totalVideos}, 'Searched Videos!!!'),
+//             )
+//     } catch (error) {
+//         throw new ApiError(401, error.message);
+//     }
+// })
 
 const publishAVideo = asyncHandler(async (req, res) => {
     const { title, description, category, duration, isPublished } = req.body;
@@ -105,18 +105,9 @@ const publishAVideo = asyncHandler(async (req, res) => {
         owner: req.user._id,
         isPublished
     });
-    const _id = video._id;
-    const options = {
-        httpOnly: true,
-        secure: true
-    }
-
     return res
         .status(201)
-        .json(
-            new ApiResponse(
-                200, video, "Your video pulished successfully!!!"
-            )
+        .json(new ApiResponse(200, video, "Your video pulished successfully!!!")
         )
 })
 
@@ -158,11 +149,11 @@ const getVideoById = asyncHandler(async (req, res) => {
             .status(200)
             .json(
                 new ApiResponse(
-                    201, video, "Video is getted successfully by its Id"
+                    200, video, "Video is getted successfully by its Id"
                 )
             )
     } catch (error) {
-        throw new ApiError(402, 'Something went wrong!!!');
+        throw error;
     }
 })
 
@@ -198,26 +189,34 @@ const getVideoBySearch = asyncHandler(async (req, res) => {
     return res
         .status(200)
         .json(
-            new ApiResponse(201, { videos }, "Searched Videos!!!")
+            new ApiResponse(200, { videos }, "Searched Videos!!!")
         )
 })
 
 const getRecommendedVideos = asyncHandler(async (req, res) => {
     const { videoId } = req.params;
-    const recommendedVideos = [];
     if (!videoId) {
-        throw new ApiError(404, "VideoId not found");
+        throw new ApiError(400, "VideoId is required");
     }
 
-    // Recommend on the basis of users watch History.
-    const watchedVideos = req.user.populate("watchHistory.video");
-    if (watchedVideos?.watchHistory?.length) {
-        const historyVideos = watchedVideos.watchHistory
+    // fetch currentVideo FIRST before anything else
+    const currentVideo = await Video.findById(videoId);
+    if (!currentVideo) {
+        throw new ApiError(404, "Video not found");
+    }
+
+    const recommendedVideos = [];
+
+    // Recommend based on watch history
+    const userWithHistory = await User.findById(req.user._id).populate("watchHistory.video");
+    if (userWithHistory?.watchHistory?.length) {
+        const historyVideos = userWithHistory.watchHistory
             .slice(0, 10)
             .map(v => v.video)
             .filter(Boolean);
         const historyCategory = historyVideos.map(v => v.category);
         const historyOwner = historyVideos.map(v => v.owner);
+
         const historyBased = await Video.find({
             _id: {
                 $ne: currentVideo._id,
@@ -226,26 +225,24 @@ const getRecommendedVideos = asyncHandler(async (req, res) => {
             $or: [
                 { category: { $in: historyCategory } },
                 { owner: { $in: historyOwner } }
-            ]
+            ],
+            isPublished: true
         }).limit(10);
         recommendedVideos.push(...historyBased);
     }
 
-    // Suggest Videos on the basis of the current playing Videos category or its owner.
-    const currentVideo = await Video.findById(videoId);
-    if (!currentVideo) {
-        throw new ApiError(404, "Video not found");
-    }
+    // Suggest based on current video's category/owner
     const categoryBased = await Video.find({
         _id: { $ne: videoId },
         $or: [
             { category: currentVideo.category },
             { owner: currentVideo.owner }
-        ]
+        ],
+        isPublished: true
     }).limit(10);
     recommendedVideos.push(...categoryBased);
 
-    // Filter out the common results.
+    // Deduplicate
     const uniqueVideos = [];
     const seen = new Set();
     for (const video of recommendedVideos) {
@@ -255,9 +252,7 @@ const getRecommendedVideos = asyncHandler(async (req, res) => {
         }
     }
 
-    return res.status(200)
-        .json(new ApiResponse(201, { uniqueVideos }, "Suggested Videos!!!")
-        )
+    return res.status(200).json(new ApiResponse(200, { uniqueVideos }, "Suggested Videos!!!"));
 })
 
 const updateVideo = asyncHandler(async (req, res) => {
@@ -315,8 +310,8 @@ const deleteAVideo = asyncHandler(async (req, res) => {
         }
 
         const video = await Video.findById(id);
-        if (!video) {
-            throw new ApiError(404, "Video doesnt exist!!!");
+        if (!video || video.owner.toString() !== req.user._id.toString()) {
+            throw new ApiError(403, "Unauthorized action");
         }
 
         await deleteFromCloudinary(video.videoPublicId, "video");
@@ -342,7 +337,11 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
 
     const video = await Video.findById(id);
     if (!video) {
-        throw new ApiError(404, "Not found")
+        throw new ApiError(404, "Video not found")
+    }
+
+    if (video.owner.toString() !== req.user._id.toString()) {
+        throw new Error("Unauthorized");
     }
 
     if (video.isPublished === true) {

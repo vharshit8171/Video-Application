@@ -1,6 +1,7 @@
 import asyncHandler from "../utiles/asyncHandler.js";
 import { ApiResponse } from "../utiles/ApiResponse.js";
 import { Video } from "../models/video.model.js";
+import mongoose  from "mongoose";
 import { Channel } from "../models/channel.model.js";
 import { User } from "../models/user.model.js";
 import { ApiError } from "../utiles/ApiError.js";
@@ -103,12 +104,17 @@ const editChannelByHandle = asyncHandler(async (req, res) => {
         }
     });
 
-    const existedChannel = await Channel.findOne(req.channel._id);
+    const id = req.channel._id;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ message: "Invalid ID" });
+    }
+
+    const existedChannel = await Channel.findById(id);
 
     if (logoLocalPath) {
         const logoCloudPath = await UploadOnCloudinary(logoLocalPath);
         await fs.promises.unlink(logoLocalPath);
-        if(existedChannel.logoPublicId){
+        if (existedChannel.logoPublicId) {
             await deleteFromCloudinary(existedChannel.logoPublicId, "image");
         }
         channel.logo = logoCloudPath.url;
@@ -118,7 +124,7 @@ const editChannelByHandle = asyncHandler(async (req, res) => {
     if (bannerLocalPath) {
         const bannerCloudPath = await UploadOnCloudinary(bannerLocalPath);
         await fs.promises.unlink(bannerLocalPath);
-        if(existedChannel?.bannerPublicId){
+        if (existedChannel?.bannerPublicId) {
             await deleteFromCloudinary(existedChannel.bannerPublicId, "image");
         }
         channel.banner = bannerCloudPath.url;
@@ -151,7 +157,7 @@ const deleteChannelByHandle = asyncHandler(async (req, res) => {
             await deleteFromCloudinary(video.thumbnailPublicId, "image");
         }
         // Removes video docs from DB. 
-        await Video.deleteMany({owner:channel.owner});
+        await Video.deleteMany({ owner: channel.owner });
 
         await User.findByIdAndUpdate(channel.owner, { $unset: { channel: "" } });
         await Channel.deleteOne({ _id: channel._id });

@@ -4,7 +4,7 @@ import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 import { usePlaylistStore } from "../../../store/PlaylistStore.js";
 
-const PlaylistDetail = () => {
+const PlaylistVideos = () => {
   const navigate = useNavigate();
   const { playlistId } = useParams();
 
@@ -23,9 +23,9 @@ const PlaylistDetail = () => {
   }, [getPlaylistById, playlistId]);
 
   const handledelete = async () => {
-    deletePlaylist(currentPlaylist._id);
-    navigate("/playlist");
+    await deletePlaylist(currentPlaylist._id);
     toast.success("Playlist deleted successfully!!!");
+    navigate("/playlist");
   }
 
   if (isLoading || !currentPlaylist) {
@@ -129,4 +129,4 @@ const PlaylistDetail = () => {
   );
 };
 
-export default PlaylistDetail;
+export default PlaylistVideos;

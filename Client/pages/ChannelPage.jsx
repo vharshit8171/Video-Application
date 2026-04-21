@@ -1,3 +1,4 @@
+import toast from "react-hot-toast";
 import { useState, useEffect } from "react";
 import { Plus, Pencil } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -5,10 +6,10 @@ import { useAuthStore } from "../store/authStore.js";
 import { useVideoStore } from "../store/videoStore.js";
 import { useChannelStore } from "../store/channelStore.js";
 import NotFound from "../src/components/ui/NotFound.jsx";
-import PageLoader from "../src/components/ui/PageLoader.jsx"
+import VideoSkeleton from "../src/components/ui/VideoSkeleton.jsx";
+import PageLoader from "../src/components/ui/PageLoader.jsx";
 import VideoCard from "../src/components/ui/VideoCard.jsx";
 import ConfirmAction from "../src/components/ui/ConfirmAction.jsx";
-import toast from "react-hot-toast";
 
 const ChannelPage = () => {
   const navigate = useNavigate();
@@ -18,7 +19,7 @@ const ChannelPage = () => {
   const user = useAuthStore((state) => state.user);
   const channel = useChannelStore((state) => state.channel);
   const fetchChannelByHandle = useChannelStore((state) => state.fetchChannelByHandle);
-  // const isLoading = useChannelStore((state) => state.isLoading);
+  const isLoading = useChannelStore((state) => state.isLoading);
   const error = useChannelStore((state) => state.error);
   const fetchOwnerVideos = useVideoStore((state) => state.fetchOwnerVideos);
   const isOwnerVideosLoading = useVideoStore((state) => state.isOwnerVideosLoading);
@@ -42,9 +43,9 @@ const ChannelPage = () => {
     setOpenConfirm(true);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     try {
-      deleteVideo(channel.handle, videoToDelete._id);
+      await deleteVideo(channel.handle, videoToDelete._id);
       toast.success("Video Deleted Successfully!!!");
       navigate(`/channel/${user.channel?.handle}`);
       setOpenConfirm(false);
@@ -55,7 +56,7 @@ const ChannelPage = () => {
   };
 
   if (error === "Channel not found") { return <NotFound />; }
-  if (!channel) {
+  if (!channel || isLoading) {
     return (
       <div className="w-screen min-h-screen flex items-center justify-center bg-black text-white">
         <PageLoader />
@@ -96,7 +97,6 @@ const ChannelPage = () => {
         {isOwner && (
           <div className="mt-2 flex justify-center gap-4 flex-wrap">
 
-            {/* Upload Video */}
             <button
               onClick={() => navigate(`/channel/${channel.handle}/upload`)}
               className="flex items-center gap-1 px-5 py-2.5 cursor-pointer bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-semibold rounded-full transition-all duration-300">
@@ -104,7 +104,6 @@ const ChannelPage = () => {
               Upload Video
             </button>
 
-            {/* Edit Channel */}
             <button
               onClick={() => navigate(`/channel/${channel.handle}/edit`)}
               className="flex items-center gap-2 px-5 py-2.5
@@ -117,25 +116,41 @@ const ChannelPage = () => {
         )}
       </div>
 
-      <div className="mt-4 px-4 sm:px-6 lg:px-10">
-        <h2 className="text-2xl font-semibold mb-2">
+      <div className="mt-2 px-4 sm:px-6 lg:px-0">
+        <h2 className="text-2xl font-semibold mb-4 text-white">
           Videos
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 cursor-pointer">
-          {isOwnerVideosLoading ? (<PageLoader />)
-            : ownerVideosOnly.length === 0 ? (
-              <p className="text-gray-400">No videos uploaded yet.</p>
-            ) : (ownerVideosOnly.map((video) => (
-              <VideoCard
-                key={video._id} video={video} onDeleteRequest={requestDelete} />
-            )))}
+        <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-1">
+          {isOwnerVideosLoading ? (
+            <div className="col-span-full flex justify-center py-10">
+              <VideoSkeleton />
+            </div>
+          ) : ownerVideosOnly.length === 0 ? (
+            <p className="text-gray-400 col-span-full text-center py-10">No videos uploaded yet.</p>
+          ) : (
+            ownerVideosOnly.map((video) => (
+              <div
+                key={video._id}
+                className="w-full max-w-full"
+              >
+                <div className="w-full aspect-video">
+                  <VideoCard
+                    video={video}
+                    onDeleteRequest={requestDelete}
+                  />
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
+
       {openConfirm && (
         <ConfirmAction
           title="Delete Video"
           description="Are you sure to delete this video."
-          confirmText="Delete" onConfirm={handleConfirmDelete}
+          confirmText="Delete"
+          onConfirm={handleConfirmDelete}
           setOpenConfirm={setOpenConfirm}
         />
       )}

@@ -92,7 +92,7 @@ const LandingPage = () => {
                   sm:w-auto sm:h-auto xl:w-[250px] xl:h-[65px] flex justify-center items-center
                   text-base sm:text-lg
                   font-semibold cursor-pointer"
-                href="/docs/components/card-carousel"
+                href="/signup"
               >
                 Get Started
               </WrapButton>

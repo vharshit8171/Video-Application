@@ -4,7 +4,7 @@ import VideoCard from "./VideoCard";
 import {useVideoStore} from "../../../store/videoStore.js"
 
 const RecommendedVideos = ({videoId}) => {
-  const isrecommendedLoading = useVideoStore((state) => state.isLoading);
+  const isrecommendedLoading = useVideoStore((state) => state.isrecommendedLoading);
   const error = useVideoStore((state) => state.error);
   const recommendedVideos = useVideoStore((state) => state.recommendedVideos);
   const getRecommendedVideos = useVideoStore((state) => state.getRecommendedVideos);

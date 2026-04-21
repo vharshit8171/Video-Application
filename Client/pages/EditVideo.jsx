@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
 import toast from "react-hot-toast";
+import { useState, useEffect } from "react";
+import PageLoader from "../src/components/ui/PageLoader.jsx";
 import { useNavigate, useParams } from "react-router-dom";
 import VideoForm from "../src/components/ui/VideoForm"
 import { useAuthStore } from "../store/authStore.js";
@@ -9,8 +9,10 @@ import { useChannelStore } from "../store/channelStore.js";
 
 const EditVideo = () => {
     const user = useAuthStore((state) => state.user);
+    const getVideoById = useVideoStore((state) => state.getVideoById);
     const editVideo = useVideoStore((state) => state.
         editVideo);
+    const currentVideo = useVideoStore((state) => state.currentVideo);    
     const channel = useChannelStore((state) => state.channel);
     const [formData, setFormData] = useState({
         title: "",
@@ -25,7 +27,7 @@ const EditVideo = () => {
 
     useEffect(() => {
         const fetchVideo = async () => {
-            const res = await axios.get(`http://localhost:5000/api/v1/video/getVideo/${videoId}`, { withCredentials: true });
+            const res = await getVideoById(videoId);
             setFormData({
                 title: res.data.data.title,
                 description: res.data.data.description,
@@ -35,7 +37,7 @@ const EditVideo = () => {
             })
         }
         fetchVideo();
-    }, [videoId])
+    }, [videoId,getVideoById])
 
     const handleChange = (e) => {
         const { name, value, files, type, checked } = e.target;
@@ -72,6 +74,14 @@ const EditVideo = () => {
             setisPublishing(false);
         }
     };
+
+    if(!currentVideo){
+        return(
+            <div className="h-screen bg-black flex items-center justify-center">
+                <div className="text-white text-lg"><PageLoader /></div>
+            </div>
+        )
+    }
 
     return (
         <div className="h-screen flex justify-center px-4 pt-28 bg-black">
